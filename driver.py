@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""Description"""
+"""Driver script"""
 
 __author__ = 'Pedro Larroy'
 __version__ = '0.1'
