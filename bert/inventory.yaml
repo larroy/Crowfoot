@@ -1,7 +1,0 @@
-all:
-  hosts:
-    ec2-52-12-173-76.us-west-2.compute.amazonaws.com: null
-#    ec2-54-187-251-111.us-west-2.compute.amazonaws.com: null
-  vars:
-    ansible_user: ubuntu
-    user_name: piotr

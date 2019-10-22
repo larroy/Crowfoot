@@ -28,8 +28,8 @@ def create_inventory(file: str='inventory.yaml') -> None:
     hostnames = list(map(lambda x: x.public_dns_name, instances))
     if os.path.exists(file):
         raise FileExistsError(f"'{file}' already exists")
-    with open(f, 'w+') as f:
-        f.write(yaml_ansible_inventory(hostnames, ansible_user='ubuntu', user_name='piotr'))
+    with open(file, 'w+') as fh:
+        fh.write(yaml_ansible_inventory(hostnames, ansible_user='ubuntu', user_name='piotr'))
 
 
 def provision() -> None:
