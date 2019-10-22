@@ -34,5 +34,5 @@ and -m the module (by default is prepare.py).
 
 ./driver.py -f provision bert
 
-./driver.py -f create_inventory bertf
+./driver.py -f create_inventory bert
 ```

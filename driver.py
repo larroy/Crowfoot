@@ -15,7 +15,11 @@ import importlib
 from util import *
 
 def config_argparse() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description="", epilog="")
+    parser = argparse.ArgumentParser(description="Drive infrastructure and training with a simple commandline tool.",
+        epilog="""
+Example:
+./driver.py -f create_inventory bert
+""")
     parser.add_argument('bdir', nargs='?', help='directory with benchmark metadata')
     parser.add_argument('-m', type=str, default='prepare',
         help='module to call')
@@ -46,7 +50,9 @@ def main():
         else:
             raise RuntimeError(f"benchmark metadata '{args.bdir}' must be a directory")
     else:
-        raise RuntimeError("Not implemented")
+        logging.error("Specify a directory with scripts and configs.")
+        parser.print_help()
+        return 1
 
     execute(args.bdir, args.m, args.f)
     return 0
