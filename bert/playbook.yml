@@ -132,6 +132,12 @@
         regexp: '^kernel.yama.ptrace_scope'
         line: 'kernel.yama.ptrace_scope = 0'
 
+    - name: disable StrictHostKeyChecking for ssh
+      lineinfile:
+        dest: /home/{{ user_name }}/.ssh/config
+        state: present
+        line: 'StrictHostKeyChecking=no'
+
 #
 # Docker Install
 #
@@ -161,16 +167,19 @@
         state: mounted
 
 
-    - apt:
+    - name: Installing docker-ce
+      apt:
         name:
             - docker-ce
 
-    - user:
+    - name: Add {{ user_name }} to docker group
+      user:
         name: "{{ user_name }}"
         groups: docker
         append: yes
 
-    - pip:
+    - name: Install docker pip package
+      pip:
         name: docker
         executable: pip3
 

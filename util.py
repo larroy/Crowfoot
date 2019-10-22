@@ -409,17 +409,21 @@ def yaml_ansible_inventory(hosts, **vars):
 
 def create_inventory(file: str='inventory.yaml') -> None:
     """Create inventory file from running tagged instances"""
-    logging.info("Creating inventory file")
+    logging.info(f"Creating inventory file: '{file}'")
+    if os.path.exists(file):
+        logging.warning(f"create_inventory: '{file}' already exists, skipping")
+        #raise FileExistsError(f"'{file}' already exists")
     instances = get_tagged_instances(('label', 'benchmark'))
     hostnames = list(map(lambda x: x.public_dns_name, instances))
-    if os.path.exists(file):
-        raise FileExistsError(f"'{file}' already exists")
     with open(file, 'w+') as fh:
         fh.write(yaml_ansible_inventory(hostnames, ansible_user='ubuntu', user_name='piotr'))
 
 
 def create_hosts_file(file: str='hosts.txt') -> None:
     """Create a hosts file with ip addresses from the cluster nodes for mpirun / horovod"""
+    logging.info(f"Creating hosts file: '{file}'")
+    if os.path.exists(file):
+        logging.warning(f"create_hosts_file: '{file}' already exists, skipping")
     instances = get_tagged_instances(('label', 'benchmark'))
     ips = list(map(lambda x: x.public_ip_address, instances))
     with open(file, 'w+') as fh:
