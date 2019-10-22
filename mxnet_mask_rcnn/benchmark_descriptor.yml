@@ -1,0 +1,6 @@
+name: MXNet Mask RCNN single p3dn.24xlarge
+---
+id: mx_maskrcnn_p3dn
+launch_template: launch_template.yml
+...
+
