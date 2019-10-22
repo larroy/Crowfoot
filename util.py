@@ -407,6 +407,25 @@ def yaml_ansible_inventory(hosts, **vars):
     return yaml.dump(invdata)
 
 
+def create_inventory(file: str='inventory.yaml') -> None:
+    """Create inventory file from running tagged instances"""
+    logging.info("Creating inventory file")
+    instances = get_tagged_instances(('label', 'benchmark'))
+    hostnames = list(map(lambda x: x.public_dns_name, instances))
+    if os.path.exists(file):
+        raise FileExistsError(f"'{file}' already exists")
+    with open(file, 'w+') as fh:
+        fh.write(yaml_ansible_inventory(hostnames, ansible_user='ubuntu', user_name='piotr'))
+
+
+def create_hosts_file(file: str='hosts.txt') -> None:
+    """Create a hosts file with ip addresses from the cluster nodes for mpirun / horovod"""
+    instances = get_tagged_instances(('label', 'benchmark'))
+    ips = list(map(lambda x: x.public_ip_address, instances))
+    with open(file, 'w+') as fh:
+        fh.write('\n'.join(ips))
+
+
 def get_tagged_instances(*tags):
     ec2_resource = boto3.resource('ec2')
     filters = []

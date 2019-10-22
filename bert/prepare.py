@@ -21,19 +21,9 @@ def prepare() -> None:
     instantiate_CF_template(infra_template, "Bert-A", **tparams)
 
 
-def create_inventory(file: str='inventory.yaml') -> None:
-    """Create inventory file from running tagged instances"""
-    logging.info("Creating inventory file")
-    instances = get_tagged_instances(('label', 'benchmark'))
-    hostnames = list(map(lambda x: x.public_dns_name, instances))
-    if os.path.exists(file):
-        raise FileExistsError(f"'{file}' already exists")
-    with open(file, 'w+') as fh:
-        fh.write(yaml_ansible_inventory(hostnames, ansible_user='ubuntu', user_name='piotr'))
-
-
 def provision() -> None:
     create_inventory()
+    create_hosts_file()
     ansible_cmd =  [
         'ansible-playbook',
         '--inventory-file', 'inventory.yaml',

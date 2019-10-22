@@ -191,3 +191,11 @@
   tasks:
     - name: Change shell to fish
       shell: chsh -s `which fish` {{ user_name }}
+
+
+# Other playbooks
+#
+- import_playbook: playbooks/gpu.yml
+- import_playbook: playbooks/efa.yml
+- import_playbook: playbooks/mpi.yml
+- import_playbook: playbooks/datasets.yml
