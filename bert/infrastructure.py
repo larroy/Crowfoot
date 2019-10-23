@@ -1,6 +1,6 @@
 import logging
 
-from troposphere import Parameter, Ref, Template
+from troposphere import Parameter, Ref, Template, GetAZs
 from troposphere.ec2 import *
 from troposphere import autoscaling as asg
 from troposphere.iam import *
@@ -147,7 +147,7 @@ def create_infra_template() -> Template:
     t.add_resource(asg.AutoScalingGroup(
         "ASG",
         DependsOn=[launch_template.name],
-        AvailabilityZones=['us-west-2b'],
+        AvailabilityZones=GetAZs(Ref('AWS::Region')),
         LaunchTemplate=asg.LaunchTemplateSpecification(
             #LaunchTemplateName='LunchTemplate',
             LaunchTemplateName=launch_template.name,
