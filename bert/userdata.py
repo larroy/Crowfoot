@@ -8,7 +8,7 @@ import json
 import re
 import shutil
 
-def write_userdata_complete(fname="/tmp/userdata_complete"):
+def write_userdata_complete(fname="/root/userdata_complete"):
     with open(fname,"w+") as f:
         f.write("")
 
@@ -118,10 +118,20 @@ def raid_setup_file_preserving(raid_dev, mount_point, level='0'):
     shutil.rmtree('/tmp{}'.format(mount_point))
 
 
+def set_hostname() -> None:
+    ip = urllib.request.urlopen('http://169.254.169.254/latest/meta-data/public-ipv4').read().decode()
+    ip = ip.replace('.', '-')
+    with open('/etc/hostname', 'w+') as fh:
+        fh.write(ip)
+        fh.write('\n')
+    check_call(['hostname', '-F', '/etc/hostname'])
+
+
 def main():
     config_logging()
     logging.info("Starting userdata.py")
     raid_setup_file_preserving('/dev/md0', '/home', '0')
+    set_hostname()
     write_userdata_complete()
     logging.info("userdata.py finished")
     return 0

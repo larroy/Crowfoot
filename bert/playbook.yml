@@ -58,16 +58,13 @@
             - btrfs-progs
             - btrfs-tools
 
-#
-# Wait for raid setup to finish
-#
-
-    - name: Wait for userdata to finish
-      wait_for:
-        path: /tmp/userdata_complete
+    - name: Allow attaching gdb
+      lineinfile:
+        dest: /etc/sysctl.d/10-ptrace.conf
         state: present
-        timeout: 1200
-        sleep: 3
+        regexp: '^kernel.yama.ptrace_scope'
+        line: 'kernel.yama.ptrace_scope = 0'
+
 
 
 #
@@ -84,6 +81,28 @@
         name: "{{ user_name }}"
         groups: wheel
         shell: /bin/bash
+
+    - name: Allow 'wheel' group to have passwordless sudo
+      lineinfile:
+        dest: /etc/sudoers
+        state: present
+        regexp: '^%wheel'
+        line: '%wheel ALL=(ALL) NOPASSWD: ALL'
+        validate: 'visudo -cf %s'
+
+
+
+#
+# Wait for raid setup to finish
+#
+
+    - name: Wait for userdata to finish
+      wait_for:
+        path: /root/userdata_complete
+        state: present
+        timeout: 1200
+        sleep: 3
+
 
     - name: sync homedir/ to /home/{{ user_name }}
       synchronize:
@@ -116,21 +135,6 @@
         path: /home/{{ user_name }}/bin
         mode: "u=rwx,g=rx,o=rx"
         recurse: yes
-
-    - name: Allow 'wheel' group to have passwordless sudo
-      lineinfile:
-        dest: /etc/sudoers
-        state: present
-        regexp: '^%wheel'
-        line: '%wheel ALL=(ALL) NOPASSWD: ALL'
-        validate: 'visudo -cf %s'
-
-    - name: Allow attaching gdb
-      lineinfile:
-        dest: /etc/sysctl.d/10-ptrace.conf
-        state: present
-        regexp: '^kernel.yama.ptrace_scope'
-        line: 'kernel.yama.ptrace_scope = 0'
 
     - name: disable StrictHostKeyChecking for ssh
       lineinfile:
@@ -192,14 +196,14 @@
     - name: adjust ccache max size to 50G
       command: ccache -M50G
 
-- name: Custom commands
-  hosts: all
-  gather_facts: no
-  become: true
-  become_user: root
-  tasks:
-    - name: Change shell to fish
-      shell: chsh -s `which fish` {{ user_name }}
+      #- name: Custom commands
+      #  hosts: all
+      #  gather_facts: no
+      #  become: true
+      #  become_user: root
+      #  tasks:
+      #    - name: Change shell to fish
+      #      shell: chsh -s `which fish` {{ user_name }}
 
 
 # Other playbooks
