@@ -21,7 +21,13 @@ def script_name() -> str:
 
 
 def config_logging():
-    logging.config.fileConfig(os.getenv('LOGGING_CONF', 'logging.conf'))
+    logging_conf = os.getenv('LOGGING_CONF', 'logging.conf')
+    if os.path.isfile(logging_conf)
+        logging.config.fileConfig()
+    else:
+        logging.getLogger().setLevel(logging.INFO)
+        logging.warning("logging.conf not found when configuring logging, logging not configured")
+        logging.basicConfig(format='{}: %(asctime)-15s %(message)s'.format(script_name()))
 
 
 def get_root() -> str:
@@ -380,7 +386,10 @@ def read_file(file):
 #    logging.getLogger('urllib3').setLevel(logging.INFO)
 #    logging.getLogger('s3transfer').setLevel(logging.INFO)
 
-def provision_single(host, username):
+def ansible_provision_host(host: str, username: str, playbook='playbook.yml': str) -> None:
+    """
+    Ansible provisioning
+    """
     assert host
     assert username
     ansible_cmd= [
@@ -394,6 +403,8 @@ def provision_single(host, username):
     logging.info("Executing: '{}'".format(' '.join(ansible_cmd)))
     os.environ['ANSIBLE_HOST_KEY_CHECKING']='False'
     check_call(ansible_cmd)
+
+
 
 
 def yaml_ansible_inventory(hosts, **vars):
@@ -460,4 +471,55 @@ def assemble_userdata(*userdata_files):
         sub_message.add_header('Content-Disposition', 'attachment; filename="{}"'.format(fname))
         combined_message.attach(sub_message)
     return combined_message
+
+
+def create_instances(
+    ec2: boto3.resources.factory.ec2.ServiceResource,
+    tag: str,
+    instance_type: str,
+    keyName: str,
+    ami: str,
+    security_groups: list[str],
+    create_instance_kwargs: dict,
+    instanceCount=1: int):
+
+    logging.info("Launching {} instances".format(instanceCount))
+    kwargs = { 'ImageId': ami
+        , 'MinCount': instanceCount
+        , 'MaxCount': instanceCount
+        , 'KeyName': keyName
+        , 'InstanceType': instance_type
+        , 'UserData': assemble_userdata().as_string()
+        , 'SecurityGroupIds': security_groups
+    }
+    kwargs.update(create_instance_kwargs)
+    instances = ec2.create_instances(**kwargs)
+    ec2.create_tags(
+        Resources = [instance.id for instance in instances]
+        , Tags = [
+          {'Key': 'Name', 'Value': tag}
+        ]
+    )
+
+    return instances
+
+
+def create_ssh_anywhere_sg(ec2_client, ec2_resource):
+    sec_group_name = 'ssh_anywhere'
+    try:
+        ec2_client.delete_security_group(GroupName=sec_group_name)
+    except:
+        pass
+    sg = ec2_resource.create_security_group(
+        GroupName=sec_group_name,
+        Description='SSH from anywhere')
+    resp = ec2_client.authorize_security_group_ingress(
+        GroupId=sg.id,
+        IpPermissions=[
+            {'IpProtocol': 'tcp',
+             'FromPort': 22,
+             'ToPort': 22,
+             'IpRanges': [{'CidrIp': '0.0.0.0/0'}]}
+        ])
+    return [sec_group_name]
 
