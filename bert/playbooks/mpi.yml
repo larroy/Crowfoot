@@ -12,7 +12,7 @@
         mode: 0755
 
     - name: install impi
-      shell: ./aws_impi.sh install
+      shell: ./aws_impi.sh install dont_check_efa
       args:
         executable: /bin/bash
         chdir: /tmp
