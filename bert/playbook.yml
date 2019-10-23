@@ -98,7 +98,7 @@
 
     - name: Wait for userdata to finish
       wait_for:
-        path: /root/userdata_complete
+        path: /tmp/userdata_complete
         state: present
         timeout: 1200
         sleep: 3
@@ -141,6 +141,7 @@
         dest: /home/{{ user_name }}/.ssh/config
         state: present
         line: 'StrictHostKeyChecking=no'
+        create: yes
 
 
 
