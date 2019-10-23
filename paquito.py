@@ -23,25 +23,39 @@ import botocore
 import yaml
 import re
 from util import *
+import itertools
+
+def group_user_data(xs):
+    """Group a flat list of [file, mime, file, mime] into
+    [[file, mime], [file,mime]]"""
+    assert len(xs) % 2 == 0
+    q = deque(xs)
+    res = []
+    while q:
+        res.append( (q.popleft(), q.popleft()) )
+    return res
 
 
-def parse_args():
-    with open('ami_launch_template.yml', 'r') as f:
-        launch_template = yaml.load(f)
+def flatten(xs):
+    return list(itertools.chain.from_iterable(xs))
+
+
+def parse_args(**kwargs):
     parser = argparse.ArgumentParser(description="Paquito AMI packer")
-    parser.add_argument('-n', '--instance-name', default=launch_template.get('instance-name',
+    parser.add_argument('-n', '--instance-name', default=kwargs.get('instance-name',
                         "{}-{}".format('paquito', getpass.getuser())))
-    parser.add_argument('-i', '--instance-type', default=launch_template.get('instance-type'))
-    parser.add_argument('--ubuntu', default=launch_template.get('ubuntu'))
+    parser.add_argument('-i', '--instance-type', default=kwargs.get('instance-type'))
+    parser.add_argument('--ubuntu', default=kwargs.get('ubuntu'))
     parser.add_argument('-u', '--username',
-                        default=launch_template.get('username', getpass.getuser()))
-    ssh_key = launch_template.get('ssh-key', os.path.join(expanduser("~"),".ssh","id_rsa.pub"))
+                        default=kwargs.get('username', getpass.getuser()))
+    ssh_key = kwargs.get('ssh-key', os.path.join(expanduser("~"),".ssh","id_rsa.pub"))
     parser.add_argument('--ssh-key-file', default=ssh_key)
     parser.add_argument('--ssh-key-name', default="ssh_{}_key".format(getpass.getuser()))
-    parser.add_argument('-a', '--ami', default=launch_template.get('ami'))
-    parser.add_argument('-p', '--playbook', default=launch_template.get('playbook'))
-    parser.add_argument('-m', '--image-name', default=launch_template.get('image-name'))
-    parser.add_argument('-d', '--image-description', default=launch_template.get('image-description'))
+    parser.add_argument('-a', '--ami', default=kwargs.get('ami'))
+    parser.add_argument('-p', '--playbook', default=kwargs.get('playbook'))
+    parser.add_argument('-m', '--image-name', default=kwargs.get('image-name'))
+    parser.add_argument('--user-data', nargs="*")
+    parser.add_argument('-d', '--image-description', default=kwargs.get('image-description'))
     parser.add_argument('rest', nargs='*')
     args = parser.parse_args()
     return args
@@ -89,11 +103,20 @@ def main():
 
     config_logging()
 
-    args = parse_args()
+    launch_template = dict()
+    launch_template_file = os.getenv('PAQUITO_TEMPLATE', 'ami_launch_template.yml')
+    if os.path.exists(launch_template_file):
+        with open(launch_template_file, 'r') as f:
+            launch_template = yaml.load(f, Loader=yaml.SafeLoader)
+
+    args = parse_args(**launch_template)
+    if args.user_data:
+        args.user_data = group_user_data(args.user_data)
+    else:
+        args.user_data = launch_template['user-data']
 
     boto3_session = boto3.session.Session()
     current_region = boto3_session.region_name
-    logging.info("AWS Region is %s", current_region)
 
     fill_args_interactive(args, current_region)
     validate_args(args)
@@ -101,11 +124,15 @@ def main():
     ec2_resource = boto3.resource('ec2')
     ec2_client = boto3.client('ec2')
 
-    loggin.info("""
+    logging.info("""
+
     Instance type: %s
+    Region: %s
     Base AMI: %s
     Playbook: %s
-    """, args.instance_type, args.ami, args.playbook)
+    User Data: %s
+
+    """, args.instance_type, current_region, args.ami, args.playbook, args.user_data)
 
     try:
         logging.info("Creating security groups")
@@ -121,15 +148,14 @@ def main():
         logging.exception("Continuing: Key pair might already exist")
 
     logging.info("creating instances")
-    with open('launch_template.yml', 'r') as f:
-        launch_template = yaml.load(f)
     instances = create_instances(
         ec2_resource,
-        instance_name,
-        instance_type,
+        args.instance_name,
+        args.instance_type,
         args.ssh_key_name,
-        ami,
+        args.ami,
         security_groups,
+        args.user_data,
         launch_template.get('CreateInstanceArgs', {}))
 
     wait_for_instances(instances)

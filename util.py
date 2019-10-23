@@ -15,7 +15,7 @@ import re
 import ssl
 import sys
 from subprocess import check_call
-from typing import List, Dict
+from typing import List, Dict, Sequence
 
 def script_name() -> str:
     """:returns: script name with leading paths removed"""
@@ -283,24 +283,6 @@ def wait_port_open(server, port, timeout=None):
 
 
 
-def assemble_userdata():
-    from email.mime.multipart import MIMEMultipart
-    from email.mime.text import MIMEText
-    combined_message = MIMEMultipart()
-    userdata_files = [
-        ('userdata.py', 'text/x-shellscript'),
-        ('cloud-config', 'text/cloud-config')
-    ]
-    for fname, mimetype in userdata_files:
-        with open(fname, "r") as f:
-            content = f.read()
-        sub_message = MIMEText(content, mimetype, sys.getdefaultencoding())
-        sub_message.add_header('Content-Disposition', 'attachment; filename="{}"'.format(fname))
-        combined_message.attach(sub_message)
-    return combined_message
-
-
-
 def create_security_groups(ec2_client, ec2_resource):
     sec_group_name = 'ssh_anywhere'
     try:
@@ -463,6 +445,7 @@ def create_instances(
     keyName: str,
     ami: str,
     security_groups: List[str],
+    userdata_files: List[Sequence[str]],
     create_instance_kwargs: Dict,
     instanceCount: int = 1):
 
@@ -472,7 +455,7 @@ def create_instances(
         , 'MaxCount': instanceCount
         , 'KeyName': keyName
         , 'InstanceType': instance_type
-        , 'UserData': assemble_userdata().as_string()
+        , 'UserData': assemble_userdata(*userdata_files).as_string()
         , 'SecurityGroupIds': security_groups
     }
     kwargs.update(create_instance_kwargs)
