@@ -55,6 +55,9 @@ def parse_args(**kwargs):
     parser.add_argument('-p', '--playbook', default=kwargs.get('playbook'))
     parser.add_argument('-m', '--image-name', default=kwargs.get('image-name'))
     parser.add_argument('--user-data', nargs="*")
+    parser.add_argument('--keep-instance',
+                        help="Keep instance on to diagnose problems",
+                        action='store_true')
     parser.add_argument('-d', '--image-description', default=kwargs.get('image-description'))
     parser.add_argument('rest', nargs='*')
     args = parser.parse_args()
@@ -175,9 +178,10 @@ def main():
         create_image(ec2_client, hosts[0], image_name, image_description, **create_image_args)
         logging.info("AMI creationg complete.")
     finally:
-        logging.info("Terminate instances")
-        for instance in instances:
-            instance.terminate()
+        if not args.keep_instance:
+            logging.info("Terminate instances")
+            for instance in instances:
+                instance.terminate()
     return 0
 
 if __name__ == '__main__':
