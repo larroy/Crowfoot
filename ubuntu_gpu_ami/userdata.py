@@ -7,6 +7,7 @@ from subprocess import check_call, call, check_output
 import json
 import re
 import shutil
+import urllib.request
 
 def write_userdata_complete(fname="/root/userdata_complete"):
     with open(fname,"w+") as f:
@@ -113,10 +114,12 @@ def raid_setup(raid_device, mount, level='0') -> bool:
 
 def raid_setup_file_preserving(raid_dev, mount_point, level='0'):
     assert mount_point.startswith('/')
-    check_call(['rsync', '-vaP', mount_point, '/tmp'])
-    raid_setup(raid_dev, mount_point, level)
-    check_call(['rsync', '-vaP', '/tmp{}/'.format(mount_point), mount_point])
-    shutil.rmtree('/tmp{}'.format(mount_point))
+    if os.path.exists(mount_point):
+        check_call(['rsync', '-vaP', mount_point, '/tmp'])
+    success = raid_setup(raid_dev, mount_point, level)
+    if success and os.path.exists(mount_point):
+        check_call(['rsync', '-vaP', '/tmp{}/'.format(mount_point), mount_point])
+        shutil.rmtree('/tmp{}'.format(mount_point))
 
 
 def set_hostname() -> None:
