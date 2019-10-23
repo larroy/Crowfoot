@@ -126,16 +126,18 @@ def main():
 
     ec2_resource = boto3.resource('ec2')
     ec2_client = boto3.client('ec2')
+    aws_account = boto3.client('sts').get_caller_identity()['Account']
 
     logging.info("""
 
+    AWS Account: %s
     Instance type: %s
     Region: %s
     Base AMI: %s
     Playbook: %s
     User Data: %s
 
-    """, args.instance_type, current_region, args.ami, args.playbook, args.user_data)
+    """, aws_account, args.instance_type, current_region, args.ami, args.playbook, args.user_data)
 
     try:
         logging.info("Creating security groups")
