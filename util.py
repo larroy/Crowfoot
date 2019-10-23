@@ -362,7 +362,7 @@ def ansible_provision_host(host: str, username: str, playbook: str ='playbook.ym
         #"-v", # verbose
         "-u", "ubuntu",
         "-i", "{},".format(host),
-        "playbook.yml",
+        playbook,
         "--extra-vars", "user_name={}".format(username)]
 
     logging.info("Executing: '{}'".format(' '.join(ansible_cmd)))

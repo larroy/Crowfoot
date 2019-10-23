@@ -138,14 +138,14 @@ def main():
         logging.info("Creating security groups")
         security_groups = create_ssh_anywhere_sg(ec2_client, ec2_resource)
     except botocore.exceptions.ClientError as e:
-        logging.exception("Continuing: Security group might already exist or be used by a running instance")
+        logging.info("Continuing: Security group '%s' might already exist or be used by a running instance", security_groups)
         security_groups = ['ssh_anywhere']
 
 
     try:
         ec2_client.import_key_pair(KeyName=args.ssh_key_name, PublicKeyMaterial=read_file(args.ssh_key_file))
     except botocore.exceptions.ClientError as e:
-        logging.exception("Continuing: Key pair might already exist")
+        logging.info("Continuing: Key pair '%s' might already exist", args.ssh_key_name)
 
     logging.info("creating instances")
     instances = create_instances(
@@ -163,7 +163,7 @@ def main():
     for host in hosts:
         logging.info("Waiting for host {}".format(host))
         wait_port_open(host, 22, 300)
-        ansible_provision_host(host, username, args.playbook)
+        ansible_provision_host(host, args.username, args.playbook)
     logging.info("All done, the following hosts are now available: %s", hosts)
 
 
@@ -173,6 +173,10 @@ def main():
     )
     create_image(ec2_client, hosts[0], image_name, image_description, **create_image_args)
     logging.info("AMI creationg complete.")
+
+    logging.info("Terminate instances")
+    for instance in instances:
+        instance.terminate()
     return 0
 
 if __name__ == '__main__':
