@@ -1,6 +1,6 @@
 import logging
 
-from troposphere import Parameter, Ref, Template
+from troposphere import Parameter, Ref, Template, GetAZs
 from troposphere.ec2 import *
 from troposphere import autoscaling as asg
 from troposphere.iam import *
@@ -60,45 +60,26 @@ def create_infra_template() -> Template:
 #
 
 
-
-    cluster_sg = t.add_resource(SecurityGroup(
-        "ClusterSG",
-        #GroupName="ClusterSG",
-        GroupDescription="Allow traffic from this group",
-    ))
-
-#    cluster_access_sg = t.add_resource(SecurityGroup(
-#        "ClusterSGAccess",
-#        #GroupName="ClusterSGAccessEFA",
-#        GroupDescription="allow traffic across EFA interfaces",
-#        SecurityGroupIngress=[
-#            SecurityGroupIngress(
-#                "ClusterSGAccessIngress",
-#                IpProtocol='-1',
-#                #SourceSecurityGroupId=cluster_sg.GetAtt('name')
-#                SourceSecurityGroupId=Ref(cluster_sg),
-#                GroupId=Ref(cluster_sg),
-#            )
-#        ],
-#        SecurityGroupEgress=[
-#            SecurityGroupEgress(
-#                "ClusterSGAccessEgress",
-#                IpProtocol='-1',
-#                #GroupId="ClusterSGAccess",
-#                DestinationSecurityGroupId=Ref(cluster_sg),
-#                GroupId=Ref(cluster_sg),
-#                #GroupId=cluster_sg.GetAtt('name')
-#            )
-#        ]
-#    ))
-
-    security_group = t.add_resource(SecurityGroup(
-        "SSHSecurityGroup",
-        SecurityGroupIngress=[
-            {"ToPort": "22", "IpProtocol": "tcp", "CidrIp": "0.0.0.0/0",
-             "FromPort": "22"}],
-        GroupDescription="Allow SSH",
-    ))
+    cluster_sg = t.add_resource(
+        SecurityGroup(
+            "ClusterSG",
+            GroupDescription="Allow SSH inbound and all traffic between cluster nodes.",
+            SecurityGroupIngress=[
+                {"FromPort": 22, "ToPort": 22, "IpProtocol": "tcp", "CidrIp": "0.0.0.0/0"}
+            ],
+        )
+    )
+    cluster_sg_ingress_rule_internal = t.add_resource(
+        SecurityGroupIngress(
+            "InterClusterAccessSGIngressRule",
+            GroupName=Ref(cluster_sg),
+            IpProtocol='-1',
+            SourceSecurityGroupName=Ref(cluster_sg),
+            FromPort='-1',
+            ToPort='-1',
+            DependsOn='ClusterSG'
+        )
+    )
 
     placement_group = t.add_resource(PlacementGroup(
         "ClusteredPlacementGroup",
@@ -120,9 +101,6 @@ def create_infra_template() -> Template:
         InstanceType=Ref(instance_type_param),
         ImageId=Ref(ami_param),
         KeyName=Ref(keyname_param),
-        #SecurityGroups=[
-        #    Ref(security_group)
-        #],
         TagSpecifications=[
             TagSpecifications(
                 ResourceType='instance',
@@ -140,11 +118,7 @@ def create_infra_template() -> Template:
                 InterfaceType="efa",
                 DeviceIndex=0,
                 Groups=[
-                    #"ClusterSGAccessEFA"
-                    #Ref(cluster_sg)
-                    #cluster_sg.GetAtt('GroupId')
-                    "sg-01437c22a98805c3f",
-                    "sg-064417bbc14a1e42a"
+                    cluster_sg.GetAtt('GroupId')
                 ]
             )
         ],
@@ -173,7 +147,7 @@ def create_infra_template() -> Template:
     t.add_resource(asg.AutoScalingGroup(
         "ASG",
         DependsOn=[launch_template.name],
-        AvailabilityZones=['us-west-2b'],
+        AvailabilityZones=GetAZs(Ref('AWS::Region')),
         LaunchTemplate=asg.LaunchTemplateSpecification(
             #LaunchTemplateName='LunchTemplate',
             LaunchTemplateName=launch_template.name,
