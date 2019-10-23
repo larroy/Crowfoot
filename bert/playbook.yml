@@ -98,7 +98,7 @@
 
     - name: Wait for userdata to finish
       wait_for:
-        path: /tmp/userdata_complete
+        path: /root/userdata_complete
         state: present
         timeout: 1200
         sleep: 3
