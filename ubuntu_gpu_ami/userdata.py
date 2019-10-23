@@ -8,6 +8,7 @@ import json
 import re
 import shutil
 import urllib.request
+import tempfile
 
 def write_userdata_complete(fname="/root/userdata_complete"):
     with open(fname,"w+") as f:
@@ -114,12 +115,14 @@ def raid_setup(raid_device, mount, level='0') -> bool:
 
 def raid_setup_file_preserving(raid_dev, mount_point, level='0'):
     assert mount_point.startswith('/')
+    tmpdir = tempfile.TemporaryDirectory().name
+    #os.makedirs(tmpdir, exist_ok=True)
     if os.path.exists(mount_point):
-        check_call(['rsync', '-vaP', mount_point, '/tmp'])
+        check_call(['rsync', '-vaP', os.path.join(mount_point,''), tmpdir])
     success = raid_setup(raid_dev, mount_point, level)
     if success and os.path.exists(mount_point):
-        check_call(['rsync', '-vaP', '/tmp{}/'.format(mount_point), mount_point])
-        shutil.rmtree('/tmp{}'.format(mount_point))
+        check_call(['rsync', '-vaP', os.path.join(tmpdir, ''), mount_point])
+    shutil.rmtree(tmpdir)
 
 
 def set_hostname() -> None:

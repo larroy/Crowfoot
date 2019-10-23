@@ -160,23 +160,24 @@ def main():
 
     wait_for_instances(instances)
     hosts = [i.public_dns_name for i in instances]
-    for host in hosts:
-        logging.info("Waiting for host {}".format(host))
-        wait_port_open(host, 22, 300)
-        ansible_provision_host(host, args.username, args.playbook)
-    logging.info("All done, the following hosts are now available: %s", hosts)
+    try:
+        for host in hosts:
+            logging.info("Waiting for host {}".format(host))
+            wait_port_open(host, 22, 300)
+            ansible_provision_host(host, args.username, args.playbook)
+        logging.info("All done, the following hosts are now available: %s", hosts)
 
 
-    logging.info("Creating AMI %s from instance %s...", hosts[0], image_name)
-    create_image_args = dict(
-        BlockDeviceMappings = launch_template['CreateInstanceArgs']['BlockDeviceMappings']
-    )
-    create_image(ec2_client, hosts[0], image_name, image_description, **create_image_args)
-    logging.info("AMI creationg complete.")
-
-    logging.info("Terminate instances")
-    for instance in instances:
-        instance.terminate()
+        logging.info("Creating AMI %s from instance %s...", hosts[0], image_name)
+        create_image_args = dict(
+            BlockDeviceMappings = launch_template['CreateInstanceArgs']['BlockDeviceMappings']
+        )
+        create_image(ec2_client, hosts[0], image_name, image_description, **create_image_args)
+        logging.info("AMI creationg complete.")
+    finally:
+        logging.info("Terminate instances")
+        for instance in instances:
+            instance.terminate()
     return 0
 
 if __name__ == '__main__':
