@@ -184,20 +184,6 @@ def create_infra_template() -> Template:
         MaxSize=8,
         MinSize=0
     ))
-
-
-#    t.add_resource(asg.AutoScalingGroup(
-#        "ASG",
-#        AvailabilityZones=['us-west-2'],
-#        LaunchTemplate=asg.LaunchTemplateSpecification(
-#            LaunchTemplateName=launch_template.name,
-#            Version="1"
-#        ),
-#        AutoScalingGroupName="Bert",
-#        DesiredCapacity=1,
-#        MaxSize=1,
-#        MinSize=1
-#    ))
     return t
 
 
