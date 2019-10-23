@@ -4,6 +4,7 @@
 
 import contextlib
 import logging
+import logging.config
 import os
 from troposphere import Template
 import boto3
@@ -14,6 +15,7 @@ import re
 import ssl
 import sys
 from subprocess import check_call
+from typing import List, Dict
 
 def script_name() -> str:
     """:returns: script name with leading paths removed"""
@@ -22,8 +24,8 @@ def script_name() -> str:
 
 def config_logging():
     logging_conf = os.getenv('LOGGING_CONF', 'logging.conf')
-    if os.path.isfile(logging_conf)
-        logging.config.fileConfig()
+    if os.path.isfile(logging_conf):
+        logging.config.fileConfig(logging_conf)
     else:
         logging.getLogger().setLevel(logging.INFO)
         logging.warning("logging.conf not found when configuring logging, logging not configured")
@@ -297,26 +299,7 @@ def assemble_userdata():
         combined_message.attach(sub_message)
     return combined_message
 
-def create_instances(ec2, tag, instance_type, keyName, ami, security_groups, create_instance_kwargs, instanceCount=1):
-    logging.info("Launching {} instances".format(instanceCount))
-    kwargs = { 'ImageId': ami
-        , 'MinCount': instanceCount
-        , 'MaxCount': instanceCount
-        , 'KeyName': keyName
-        , 'InstanceType': instance_type
-        , 'UserData': assemble_userdata().as_string()
-        , 'SecurityGroupIds': security_groups
-    }
-    kwargs.update(create_instance_kwargs)
-    instances = ec2.create_instances(**kwargs)
-    ec2.create_tags(
-        Resources = [instance.id for instance in instances]
-        , Tags = [
-          {'Key': 'Name', 'Value': tag}
-        ]
-    )
 
-    return instances
 
 def create_security_groups(ec2_client, ec2_resource):
     sec_group_name = 'ssh_anywhere'
@@ -386,7 +369,7 @@ def read_file(file):
 #    logging.getLogger('urllib3').setLevel(logging.INFO)
 #    logging.getLogger('s3transfer').setLevel(logging.INFO)
 
-def ansible_provision_host(host: str, username: str, playbook='playbook.yml': str) -> None:
+def ansible_provision_host(host: str, username: str, playbook: str ='playbook.yml') -> None:
     """
     Ansible provisioning
     """
@@ -394,7 +377,7 @@ def ansible_provision_host(host: str, username: str, playbook='playbook.yml': st
     assert username
     ansible_cmd= [
         "ansible-playbook",
-        #"-v",
+        #"-v", # verbose
         "-u", "ubuntu",
         "-i", "{},".format(host),
         "playbook.yml",
@@ -474,14 +457,14 @@ def assemble_userdata(*userdata_files):
 
 
 def create_instances(
-    ec2: boto3.resources.factory.ec2.ServiceResource,
+    ec2: object,
     tag: str,
     instance_type: str,
     keyName: str,
     ami: str,
-    security_groups: list[str],
-    create_instance_kwargs: dict,
-    instanceCount=1: int):
+    security_groups: List[str],
+    create_instance_kwargs: Dict,
+    instanceCount: int = 1):
 
     logging.info("Launching {} instances".format(instanceCount))
     kwargs = { 'ImageId': ami
@@ -502,6 +485,20 @@ def create_instances(
     )
 
     return instances
+
+
+def create_image(
+    ec2: object,
+    instance_id: str,
+    image_name: str,
+    image_description: str,
+    **kwargs) -> None:
+    kwargs.update(dict(
+        InstanceId=instance_id,
+        Name=image_name,
+        Description=image_description,
+    ))
+    ec2.create_image(**kwargs)
 
 
 def create_ssh_anywhere_sg(ec2_client, ec2_resource):

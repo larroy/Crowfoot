@@ -12,6 +12,9 @@ instance-type: "p3dn.24xlarge"
 #instance-type: "p3dn.24xlarge"
 instance-name: paquito_ami 
 username: piotr
+playbook: playbook.yml
+image-name: ubuntu_provisioned
+image-description: Paquito ubuntu provisioned
 # https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/device_naming.html
 CreateInstanceArgs:
     InstanceInitiatedShutdownBehavior: terminate
