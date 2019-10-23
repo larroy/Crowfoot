@@ -1,10 +1,9 @@
 import logging
 
-from troposphere import Parameter, Ref, Template, GetAZs
+from troposphere import Parameter, Ref, Template, GetAZs, iam
 from troposphere.ec2 import *
 from troposphere import autoscaling as asg
-from troposphere.iam import *
-from awacs.aws import Allow, Statement, Principal, PolicyDocument, Action
+from awacs.aws import Allow, Statement, Principal, Policy, PolicyDocument, Action
 from awacs.sts import AssumeRole
 import util
 import base64
@@ -30,35 +29,42 @@ def create_infra_template() -> Template:
         Type="String",
     ))
 
-#    ec2_role = t.add_resource(Role(
-#        "EC2DefaultRole",
-#        AssumeRolePolicyDocument=PolicyDocument(
-#            Statement=[Statement(
-#                Principal="*",
-#                Effect=Allow,
-#                Action=[Action("s3", "*")],
-#                Resource=["*"]
-#            )]
-#        )
-#    ))
+    ec2_role = t.add_resource(
+        iam.Role(
+            "EC2DefaultRoleWithS3",
+            AssumeRolePolicyDocument=Policy(
+                Statement=[
+                    Statement(
+                        Effect=Allow,
+                        Action=[AssumeRole],
+                        Principal=Principal("Service", ["ec2.amazonaws.com"])
+                    )
+                ]
+            ),
+            Policies=[
+                iam.Policy(
+                    PolicyName='S3AccessPolicy',
+                    PolicyDocument=Policy(
+                        Statement=[
+                            Statement(
+                                Sid='S3Access',
+                                Effect=Allow,
+                                Action=[Action("s3", "*")],
+                                Resource=["arn:aws:s3:::*"]
+                            )
+                        ]
+                    )
+                )
+            ]
+        )
+    )
 
-#    ec2_role = t.add_resource(Role(
-#        "EC2DefaultRole",
-#        AssumeRolePolicyDocument=
-#            {
-#                "Version": "2012-10-17",
-#                "Statement": [
-#                    {
-#                    "Effect": "Allow",
-#                    "Action": "s3:*",
-#                    "Resource": "arn:aws:s3:::*",
-#                    "Principal": "*"
-#                    }
-#                ]
-#            }
-#    ))
-#
-
+    instance_profile = t.add_resource(
+        iam.InstanceProfile(
+            "EC2InstanceProfile",
+            Roles=[Ref(ec2_role)]
+        )
+    )
 
     cluster_sg = t.add_resource(
         SecurityGroup(
@@ -127,8 +133,7 @@ def create_infra_template() -> Template:
             GroupName=Ref(placement_group)
         ),
         IamInstanceProfile=IamInstanceProfile(
-            #Arn=ec2_role.GetAtt('Arn')
-            Arn='arn:aws:iam::926857016169:instance-profile/EC2DefaultRoleWithS3'
+            Arn=instance_profile.GetAtt("Arn")
         ),
         UserData=base64.b64encode(util.assemble_userdata(
             ('userdata.py', 'text/x-shellscript'),
