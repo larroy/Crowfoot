@@ -41,7 +41,6 @@ def execute(bdir: str, m: str='prepare', f: str='prepare') -> None:
 
 def main():
     config_logging()
-    logging.info("MXNet Mask RCNN benchmark driver")
     parser = config_argparse()
     args = parser.parse_args()
     if args.bdir:
