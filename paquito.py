@@ -138,7 +138,7 @@ def main():
         logging.info("Creating security groups")
         security_groups = create_ssh_anywhere_sg(ec2_client, ec2_resource)
     except botocore.exceptions.ClientError as e:
-        logging.info("Continuing: Security group '%s' might already exist or be used by a running instance", security_groups)
+        logging.info("Continuing: Security group might already exist or be used by a running instance")
         security_groups = ['ssh_anywhere']
 
 
