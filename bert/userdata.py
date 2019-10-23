@@ -106,6 +106,7 @@ def raid_setup(raid_device, mount, level='0') -> bool:
         f.writelines(fstab)
         f.write('\n')
 
+    os.makedirs(mount, exist_ok=True)
     check_call(['mount', mount])
     return True
 
@@ -130,7 +131,7 @@ def set_hostname() -> None:
 def main():
     config_logging()
     logging.info("Starting userdata.py")
-    raid_setup_file_preserving('/dev/md0', '/home', '0')
+    raid_setup_file_preserving('/dev/md0', '/mnt/ephemeral', '0')
     set_hostname()
     write_userdata_complete()
     logging.info("userdata.py finished")

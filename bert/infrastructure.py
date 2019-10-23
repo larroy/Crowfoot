@@ -111,7 +111,7 @@ def create_infra_template() -> Template:
             BlockDeviceMapping(
                 DeviceName="/dev/sda1",
                 Ebs=EBSBlockDevice(
-                    VolumeSize="400",
+                    VolumeSize="800",
                     VolumeType="gp2"
                 )
             )
