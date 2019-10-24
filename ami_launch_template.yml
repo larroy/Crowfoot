@@ -14,7 +14,7 @@ instance-type: "p3dn.24xlarge"
 instance-name: paquito_ami
 username: piotr
 playbook: bert/playbook.yml
-image-name: ubuntu_provisioned
+image-name: ubuntu_provisioned_18.04_EFA
 image-description: Paquito ubuntu provisioned
 user-data:
     - ['ubuntu_gpu_ami/cloud-config', 'text/cloud-config']

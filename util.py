@@ -479,13 +479,14 @@ def create_image(
     instance_id: str,
     image_name: str,
     image_description: str,
-    **kwargs) -> None:
+    **kwargs) -> str:
+    """Trigger creation of AMI image and return its id"""
     kwargs.update(dict(
         InstanceId=instance_id,
         Name=image_name,
         Description=image_description,
     ))
-    ec2.create_image(**kwargs)
+    return ec2.create_image(**kwargs)['ImageId']
 
 
 def create_ssh_anywhere_sg(ec2_client, ec2_resource):

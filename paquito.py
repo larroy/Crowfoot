@@ -45,14 +45,18 @@ def _create_ami_image(
     instance_id: str,
     image_name: str,
     image_description: str,
-    launch_template: object) -> None:
+    launch_template: object,
+    reboot: bool = True
+    ) -> id:
 
     logging.info("Creating AMI %s from instance %s...", image_name, instance_id)
     create_image_args = dict(
-        BlockDeviceMappings = launch_template['CreateInstanceArgs']['BlockDeviceMappings']
+        BlockDeviceMappings = launch_template['CreateInstanceArgs']['BlockDeviceMappings'],
+        NoReboot = not reboot,
     )
-    create_image(ec2, instance_id, image_name, image_description, **create_image_args)
-    logging.info("AMI creationg complete.")
+    id = create_image(ec2, instance_id, image_name, image_description, **create_image_args)
+    logging.info("AMI %s creationg complete.", id)
+    return id
 
 
 def _provision(ec2_resource, ec2_client, launch_template, args) -> None:
@@ -106,9 +110,11 @@ def _provision(ec2_resource, ec2_client, launch_template, args) -> None:
             logging.info("All done, the following hosts are now available: %s", host)
         instance = next(iter(instances))
         logging.info("Imaging the first instance: %s", instance.instance_id)
-        _create_ami_image(ec2_client, instance.instance_id, args.image_name,
+        ami_id = _create_ami_image(ec2_client, instance.instance_id, args.image_name,
                           args.image_description, launch_template)
-
+        waiter = client.get_waiter('image_available')
+        logging.info("Waiting for AMI id %s (this might take a long time)", ami_id)
+        waiter.wait(ImageIds=[ami_id])
 
     finally:
         if not args.keep_instance:
@@ -209,7 +215,7 @@ def main():
 
     if args.image_instance_id:
         _create_ami_image(ec2_client, args.image_instance_id, args.image_name, args.image_description,
-        launch_template)
+        launch_template, False)
     else:
         _provision(ec2_resource, ec2_client, launch_template, args)
     return 0
