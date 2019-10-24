@@ -15,7 +15,7 @@ def prepare() -> None:
     tparams = dict(
         Parameters=[
             {'ParameterKey': 'KeyName', 'ParameterValue': 'ssh_pllarroy_key'},
-            {'ParameterKey': 'AMI', 'ParameterValue': get_ubuntu_ami('us-west-2', '18.04')},
+            {'ParameterKey': 'AMI', 'ParameterValue': 'ami-0709ec1cc95601d28'},
         ]
     )
     instantiate_CF_template(infra_template, "Bert-A", **tparams)
