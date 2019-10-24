@@ -117,10 +117,10 @@ def raid_setup_file_preserving(raid_dev, mount_point, level='0'):
     assert mount_point.startswith('/')
     with tempfile.TemporaryDirectory() as tmpdir:
         if os.path.exists(mount_point):
-            check_call(['rsync', '-vaP', os.path.join(mount_point,''), tmpdir.name])
+            check_call(['rsync', '-vaP', os.path.join(mount_point,''), tmpdir])
         success = raid_setup(raid_dev, mount_point, level)
         if success and os.path.exists(mount_point):
-            check_call(['rsync', '-vaP', os.path.join(tmpdir.name, ''), mount_point])
+            check_call(['rsync', '-vaP', os.path.join(tmpdir, ''), mount_point])
 
 
 def set_hostname() -> None:
