@@ -112,14 +112,15 @@ def _provision(ec2_resource, ec2_client, launch_template, args) -> None:
         logging.info("Imaging the first instance: %s", instance.instance_id)
         ami_id = _create_ami_image(ec2_client, instance.instance_id, args.image_name,
                           args.image_description, launch_template)
-        waiter = client.get_waiter('image_available')
+        ami_waiter = ec2_client.get_waiter('image_available')
         logging.info("Waiting for AMI id %s (this might take a long time)", ami_id)
-        waiter.wait(ImageIds=[ami_id])
+        ami_waiter.wait(ImageIds=[ami_id])
 
     finally:
         if not args.keep_instance:
             logging.info("Terminate instances")
-            instances.stop()
+            for instance in instances:
+                instance.stop()
 
 
 def parse_args(**kwargs):
