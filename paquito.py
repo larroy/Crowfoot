@@ -128,29 +128,35 @@ def main():
     ec2_client = boto3.client('ec2')
     aws_account = boto3.client('sts').get_caller_identity()['Account']
 
-    logging.info("""
-
-    AWS Account: %s
-    Instance type: %s
-    Region: %s
-    Base AMI: %s
-    Playbook: %s
-    User Data: %s
-
-    """, aws_account, args.instance_type, current_region, args.ami, args.playbook, args.user_data)
 
     try:
         logging.info("Creating security groups")
         security_groups = create_ssh_anywhere_sg(ec2_client, ec2_resource)
     except botocore.exceptions.ClientError as e:
         logging.info("Continuing: Security group might already exist or be used by a running instance")
-        security_groups = ['ssh_anywhere']
+        res = ec2_client.describe_security_groups(GroupNames=['ssh_anywhere'])
+        security_groups = [res['SecurityGroups'][0]['GroupId']]
 
 
     try:
         ec2_client.import_key_pair(KeyName=args.ssh_key_name, PublicKeyMaterial=read_file(args.ssh_key_file))
     except botocore.exceptions.ClientError as e:
         logging.info("Continuing: Key pair '%s' might already exist", args.ssh_key_name)
+
+    logging.info("""
+
+    AWS Account: %s
+    Instance type: %s
+    Region: %s
+    Base AMI: %s
+    SSH Key: %s (from: %s)
+    Security groups: %s
+    Playbook: %s
+    User Data: %s
+
+    """, aws_account, args.instance_type, current_region, args.ami, args.ssh_key_name,
+         args.ssh_key_file, security_groups, args.playbook, args.user_data)
+
 
     logging.info("creating instances")
     instances = create_instances(

@@ -456,8 +456,12 @@ def create_instances(
         , 'KeyName': keyName
         , 'InstanceType': instance_type
         , 'UserData': assemble_userdata(*userdata_files).as_string()
-        , 'SecurityGroupIds': security_groups
     }
+    if 'NetworkInterfaces' in create_instance_kwargs:
+        for iface in create_instance_kwargs['NetworkInterfaces']:
+            iface['Groups'] = security_groups
+    else:
+        kwargs['SecurityGroupIds'] = security_groups
     kwargs.update(create_instance_kwargs)
     instances = ec2.create_instances(**kwargs)
     ec2.create_tags(
@@ -501,5 +505,5 @@ def create_ssh_anywhere_sg(ec2_client, ec2_resource):
              'ToPort': 22,
              'IpRanges': [{'CidrIp': '0.0.0.0/0'}]}
         ])
-    return [sec_group_name]
+    return [sg.id]
 

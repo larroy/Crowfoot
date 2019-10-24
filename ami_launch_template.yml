@@ -34,3 +34,10 @@ CreateInstanceArgs:
         #  Ebs: {DeleteOnTermination: true, VolumeSize: 100, VolumeType: gp2}
     IamInstanceProfile:
         Name: EC2DefaultRoleWithS3
+    NetworkInterfaces:
+      - AssociatePublicIpAddress: true
+        DeleteOnTermination: true
+        Description: efa interface
+        InterfaceType: efa
+        DeviceIndex: 0
+
