@@ -136,7 +136,7 @@ def create_infra_template() -> Template:
             Arn=instance_profile.GetAtt("Arn")
         ),
         UserData=base64.b64encode(util.assemble_userdata(
-            ('userdata.py', 'text/x-shellscript'),
+#            ('userdata.py', 'text/x-shellscript'),
             ('cloud-config', 'text/cloud-config')
         ).as_bytes()).decode()
     )

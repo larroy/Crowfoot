@@ -96,13 +96,13 @@
 # Wait for raid setup to finish
 #
 
-    - name: Wait for userdata to finish
-      wait_for:
-        path: /root/userdata_complete
-        state: present
-        timeout: 1200
-        sleep: 3
-
+#    - name: Wait for userdata to finish
+#      wait_for:
+#        path: /root/userdata_complete
+#        state: present
+#        timeout: 1200
+#        sleep: 3
+#
 
     - name: sync homedir/ to /home/{{ user_name }}
       synchronize:

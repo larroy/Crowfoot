@@ -14,11 +14,11 @@ instance-type: "p3dn.24xlarge"
 instance-name: paquito_ami
 username: piotr
 playbook: bert/playbook.yml
-image-name: ubuntu_provisioned_18.04_EFA
+image-name: ubuntu_provisioned_18.04_EFA_datasets_2
 image-description: Paquito ubuntu provisioned
 user-data:
     - ['ubuntu_gpu_ami/cloud-config', 'text/cloud-config']
-    - ['ubuntu_gpu_ami/userdata.py', 'text/x-shellscript']
+#    - ['ubuntu_gpu_ami/userdata.py', 'text/x-shellscript']
 
 # https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/device_naming.html
 CreateInstanceArgs:
