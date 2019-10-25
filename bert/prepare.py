@@ -15,10 +15,10 @@ def prepare() -> None:
     tparams = dict(
         Parameters=[
             {'ParameterKey': 'KeyName', 'ParameterValue': 'ssh_pllarroy_key'},
-            {'ParameterKey': 'AMI', 'ParameterValue': 'ami-0e95122cfcd34eb2a'},
+            {'ParameterKey': 'AMI', 'ParameterValue': 'ami-01119ef97534f61f9'},
         ]
     )
-    instantiate_CF_template(infra_template, "Bert-A", **tparams)
+    instantiate_CF_template(infra_template, "Bert-pllaroy", **tparams)
 
 
 def provision() -> None:
