@@ -1,0 +1,11 @@
+#!/bin/bash
+set -e
+set -x
+BRANCH=`git rev-parse --abbrev-ref HEAD`
+DEST=$1
+if [ -d $DEST ]; then
+    echo "Error: $DEST exists"
+    exit
+fi
+mkdir -p $DEST
+git archive $BRANCH | tar -x -C $DEST
