@@ -3,7 +3,7 @@ aws_region: us-west-2
 basedir: benchmarking_stack
 stack_name: BenchmarkStack
 resource_name: Bench
-ami: ami-084631ac49aea0ca6
+ami: ami-006a520f4237e76d1
 key: ssh_cluster
 pymodule: prepare
 pyfunction: prepare
