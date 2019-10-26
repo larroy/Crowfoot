@@ -139,6 +139,12 @@
         line: 'StrictHostKeyChecking=no'
         create: yes
 
+    - name: Configure /home/{{ user_name }}
+      file:
+        path: /home/{{ user_name }}
+        recurse: yes
+        owner: "{{ user_name }}"
+        group: "{{ user_name }}"
 
 
 #

@@ -12,18 +12,20 @@
 
     - name: Get mxnet
       shell: |
+        set -e
         git clone -q --recursive https://github.com/larroy/mxnet.git
         git clone -q --recursive https://github.com/larroy/gluon-cv.git
         git clone -q --recursive https://github.com/larroy/gluon-nlp.git
         cp cmake_options.yml mxnet
         cd mxnet
-        ./dev_menu.py build 2>&1 | tee build.log
+        ./dev_menu.py build 2>&1 > build.log
         cd ..
-        pip install -e gluon-cv
-        pip install -e gluon-nlp
+        pip3 install -e gluon-cv > /dev/null
+        pip3 install -e gluon-nlp > /dev/null
       args:
         executable: /bin/bash
         chdir: "/home/{{ user_name }}"
+        creates: /home/{{ user_name }}/mxnet
 
     - name: Configure /home/{{ user_name }}
       file:
