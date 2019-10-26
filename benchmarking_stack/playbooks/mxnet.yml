@@ -1,0 +1,34 @@
+--- # Ansible playbook 
+- name: MXNet build
+  hosts: all
+  gather_facts: no
+  become: true
+  become_user: root
+  tasks:
+    - name: Copy MXNet build config cmake_options.yml
+      copy:
+        src: cmake_options.yml
+        dest: "/home/{{ user_name }}/cmake_options.yml"
+
+    - name: Get mxnet
+      shell: |
+        git clone -q --recursive https://github.com/larroy/mxnet.git
+        git clone -q --recursive https://github.com/larroy/gluon-cv.git
+        git clone -q --recursive https://github.com/larroy/gluon-nlp.git
+        cp cmake_options.yml mxnet
+        cd mxnet
+        ./dev_menu.py build 2>&1 | tee build.log
+        cd ..
+        pip install -e gluon-cv
+        pip install -e gluon-nlp
+      args:
+        executable: /bin/bash
+        chdir: "/home/{{ user_name }}"
+
+    - name: Configure /home/{{ user_name }}
+      file:
+        path: /home/{{ user_name }}
+        recurse: yes
+        owner: "{{ user_name }}"
+        group: "{{ user_name }}"
+
