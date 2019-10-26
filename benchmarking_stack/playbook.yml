@@ -135,6 +135,8 @@
         path: /home/{{ user_name }}/bin
         mode: "u=rwx,g=rx,o=rx"
         recurse: yes
+        owner: "{{ user_name }}"
+        group: "{{ user_name }}"
 
     - name: disable StrictHostKeyChecking for ssh
       lineinfile:
