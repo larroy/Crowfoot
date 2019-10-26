@@ -19,6 +19,7 @@
         cp cmake_options.yml mxnet
         cd mxnet
         ./dev_menu.py build 2>&1 > build.log
+        source py3_venv/bin/activate
         cd ..
         pip3 install -e gluon-cv > /dev/null
         pip3 install -e gluon-nlp > /dev/null
