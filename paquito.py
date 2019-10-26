@@ -114,7 +114,7 @@ def _provision(ec2_resource, ec2_client, launch_template, args) -> None:
                           args.image_description, launch_template)
         ami_waiter = ec2_client.get_waiter('image_available')
         logging.info("Waiting for AMI id %s (this might take a long time)", ami_id)
-        ami_waiter.wait(ImageIds=[ami_id])
+        ami_waiter.wait(ImageIds=[ami_id], WaiterConfig={'Delay': 10, 'MaxAttempts': 180})
 
     finally:
         if not args.keep_instance:
@@ -216,7 +216,7 @@ def main():
 
     if args.image_instance_id:
         _create_ami_image(ec2_client, args.image_instance_id, args.image_name, args.image_description,
-        launch_template, False)
+        launch_template, True)
     else:
         _provision(ec2_resource, ec2_client, launch_template, args)
     return 0
