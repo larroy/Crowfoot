@@ -12,6 +12,7 @@ import argparse
 import logging
 import logging.config
 import importlib
+import yaml
 from util import *
 
 def config_argparse() -> argparse.ArgumentParser:
@@ -20,40 +21,31 @@ def config_argparse() -> argparse.ArgumentParser:
 Example:
 ./driver.py -f create_inventory bert
 """)
-    parser.add_argument('bdir', nargs='?', help='directory with benchmark metadata')
-    parser.add_argument('-m', type=str, default='prepare',
-        help='module to call')
-    parser.add_argument('-f', type=str, default='prepare',
-        help='function to call')
+    parser.add_argument('config', nargs=1, help='config file')
     return parser
 
 
-def execute(bdir: str, m: str='prepare', f: str='prepare') -> None:
-    sys.path.append(bdir)
-    j = os.path.join
-    logging.info("Looking for '%s' method in module in %s", f, bdir)
-    mod = importlib.import_module(m, bdir)
+def execute(config: str) -> None:
+    with open(config, 'r') as fh:
+        config = yaml.load(fh, Loader=yaml.SafeLoader)
+    sys.path.append(config['basedir'])
+    logging.info("Looking for '%s' method in module %s in %s",
+                 config['pyfunction'], config['pymodule'], config['basedir'])
+    mod = importlib.import_module(config['pymodule'], config['basedir'])
     with remember_cwd():
-        os.chdir(bdir)
-        logging.info(f" = {m}.{f} = ")
-        getattr(mod, f)()
+        os.chdir(config['basedir'])
+        getattr(mod, config['pyfunction'])(config)
 
 
 def main():
     config_logging()
     parser = config_argparse()
     args = parser.parse_args()
-    if args.bdir:
-        if os.path.exists(args.bdir):
-            logging.info("Using benchmark metadata folder: %s", args.bdir)
-        else:
-            raise RuntimeError(f"benchmark metadata '{args.bdir}' must be a directory")
-    else:
-        logging.error("Specify a directory with scripts and configs.")
+    if not len(args.config) == 1:
+        logging.error("specify a config file")
         parser.print_help()
         return 1
-
-    execute(args.bdir, args.m, args.f)
+    execute(args.config[0])
     return 0
 
 if __name__ == '__main__':

@@ -8,7 +8,7 @@ from awacs.sts import AssumeRole
 import util
 import base64
 
-def create_infra_template() -> Template:
+def create_infra_template(config) -> Template:
     t = Template()
     keyname_param = t.add_parameter(Parameter(
         "KeyName",
@@ -28,6 +28,13 @@ def create_infra_template() -> Template:
         Description="AMI image",
         Type="String",
     ))
+
+    name_param = t.add_parameter(Parameter(
+        "ResourceName",
+        Description="Name",
+        Type="String",
+    ))
+
 
     ec2_role = t.add_resource(
         iam.Role(
@@ -111,8 +118,8 @@ def create_infra_template() -> Template:
             TagSpecifications(
                 ResourceType='instance',
                 Tags=[
-                    Tag(Key="Name", Value='bert-A'),
-                    Tag(Key="label", Value='benchmark')
+                    Tag(Key="Name", Value=Ref(name_param)),
+                    Tag(Key="label", Value=Ref(name_param))
                 ],
             )
         ],
@@ -143,44 +150,23 @@ def create_infra_template() -> Template:
 
 
     launch_template = t.add_resource(LaunchTemplate(
-        "LunchTemplate",
-        LaunchTemplateName="LunchTemplate",
+        config['resource_name'] + "LT",
+        LaunchTemplateName=config['resource_name']+"LT",
         LaunchTemplateData=launch_template_data,
         DependsOn=placement_group.name
     ))
 
     t.add_resource(asg.AutoScalingGroup(
-        "ASG",
+        config['resource_name'] + "ASG",
         DependsOn=[launch_template.name],
         AvailabilityZones=GetAZs(Ref('AWS::Region')),
         LaunchTemplate=asg.LaunchTemplateSpecification(
-            #LaunchTemplateName='LunchTemplate',
             LaunchTemplateName=launch_template.name,
-            Version="1"
+            Version=launch_template.GetAtt("LatestVersionNumber")
         ),
-        AutoScalingGroupName="Bert",
-        DesiredCapacity=1,
-        MaxSize=8,
+        AutoScalingGroupName=Ref(name_param),
+        DesiredCapacity=64,
+        MaxSize=64,
         MinSize=0
     ))
     return t
-
-
-def create_asg_template() -> Template:
-    t = Template()
-    t.add_resource(asg.AutoScalingGroup(
-        "ASG",
-        AvailabilityZones=['us-west-2a'],
-        LaunchTemplate=asg.LaunchTemplateSpecification(
-            LaunchTemplateName='LunchTemplate',
-            Version="1"
-        ),
-        AutoScalingGroupName="Bert",
-        DesiredCapacity=1,
-        MaxSize=1,
-        MinSize=1
-    ))
-    return t
-
-
-

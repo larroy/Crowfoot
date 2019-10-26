@@ -2,23 +2,24 @@ from util import *
 import os
 from infrastructure import *
 from subprocess import check_call
+import boto3
 
-def prepare() -> None:
+def prepare(config) -> None:
     """
     Entry point
     """
     root = get_root()
-    j = os.path.join
-    print('Prepare! {}'.format(os.getcwd()))
-    infra_template = create_infra_template()
+    boto3.setup_default_session(region_name=config['aws_region'], profile_name=config['aws_profile'])
+    infra_template = create_infra_template(config)
     print(infra_template.to_json())
     tparams = dict(
         Parameters=[
-            {'ParameterKey': 'KeyName', 'ParameterValue': 'ssh_pllarroy_key'},
-            {'ParameterKey': 'AMI', 'ParameterValue': 'ami-0e95122cfcd34eb2a'},
+            {'ParameterKey': 'KeyName', 'ParameterValue': config['key']},
+            {'ParameterKey': 'AMI', 'ParameterValue': config['ami']},
+            {'ParameterKey': 'ResourceName', 'ParameterValue': config['resource_name']},
         ]
     )
-    instantiate_CF_template(infra_template, "Bert-A", **tparams)
+    instantiate_CF_template(infra_template, config['stack_name'], **tparams)
 
 
 def provision() -> None:
@@ -32,7 +33,3 @@ def provision() -> None:
     logging.info("Executing: '{}'".format(' '.join(ansible_cmd)))
     os.environ['ANSIBLE_HOST_KEY_CHECKING']='False'
     check_call(ansible_cmd)
-
-
-def run() -> None:
-    pass

@@ -1,0 +1,9 @@
+aws_profile: aieng
+aws_region: us-east-1
+basedir: bert
+stack_name: BenchmarkStack
+resource_name: Bench
+ami: ami-0285108df31f10bad
+key: ssh_cluster
+pymodule: prepare
+pyfunction: prepare
