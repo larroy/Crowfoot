@@ -1,1 +1,0 @@
-# Bert training at scale

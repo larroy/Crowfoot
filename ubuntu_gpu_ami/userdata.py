@@ -135,7 +135,7 @@ def set_hostname() -> None:
 def main():
     config_logging()
     logging.info("Starting userdata.py")
-    raid_setup_file_preserving('/dev/md0', '/mnt/ephemeral', '0')
+    #raid_setup_file_preserving('/dev/md0', '/mnt/ephemeral', '0')
     set_hostname()
     write_userdata_complete()
     logging.info("userdata.py finished")

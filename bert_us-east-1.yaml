@@ -1,6 +1,6 @@
 aws_profile: aieng
 aws_region: us-east-1
-basedir: bert
+basedir: benchmarking_stack
 stack_name: BenchmarkStack
 resource_name: Bench
 ami: ami-0285108df31f10bad
