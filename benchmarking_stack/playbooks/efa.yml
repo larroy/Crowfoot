@@ -14,12 +14,12 @@
 
     - name: Download EFA installer
       get_url:
-        url: https://s3-us-west-2.amazonaws.com/aws-efa-installer/aws-efa-installer-1.5.4.tar.gz
-        dest: "{{ efa_install_dir }}/aws-efa-installer-1.5.4.tar.gz"
+        url: https://s3-us-west-2.amazonaws.com/aws-efa-installer/aws-efa-installer-1.6.1.tar.gz
+        dest: "{{ efa_install_dir }}/efa-installer.tar.gz"
 
     - name: Extract EFA installer
       unarchive: 
-        src: "{{efa_install_dir}}/aws-efa-installer-1.5.4.tar.gz"
+        src: "{{efa_install_dir}}/efa-installer.tar.gz"
         dest: "{{efa_install_dir}}/"
         remote_src: yes
          
