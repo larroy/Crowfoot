@@ -38,7 +38,7 @@ def create_infra_template(config) -> Template:
 
     ec2_role = t.add_resource(
         iam.Role(
-            "EC2DefaultRoleWithS3",
+            "EC2InstanceRoleWithS3",
             AssumeRolePolicyDocument=Policy(
                 Statement=[
                     Statement(
@@ -48,21 +48,9 @@ def create_infra_template(config) -> Template:
                     )
                 ]
             ),
-            Policies=[
-                iam.Policy(
-                    PolicyName='S3AccessPolicy',
-                    PolicyDocument=Policy(
-                        Statement=[
-                            Statement(
-                                Sid='S3Access',
-                                Effect=Allow,
-                                Action=[Action("s3", "*")],
-                                Resource=["arn:aws:s3:::*"]
-                            )
-                        ]
-                    )
-                )
-            ]
+            ManagedPolicyArns=[
+                'arn:aws:iam::aws:policy/AmazonS3FullAccess',
+            ],
         )
     )
 
@@ -136,10 +124,10 @@ def create_infra_template(config) -> Template:
             )
         ],
         Placement=Placement(
-            #GroupName=placement_group.name,
             GroupName=Ref(placement_group)
         ),
         IamInstanceProfile=IamInstanceProfile(
+            #Arn='arn:aws:iam::926857016169:instance-profile/EC2DefaultRoleWithS3'
             Arn=instance_profile.GetAtt("Arn")
         ),
         UserData=base64.b64encode(util.assemble_userdata(
@@ -153,15 +141,15 @@ def create_infra_template(config) -> Template:
         config['resource_name'] + "LT",
         LaunchTemplateName=config['resource_name']+"LT",
         LaunchTemplateData=launch_template_data,
-        DependsOn=placement_group.name
+        DependsOn=[placement_group]
     ))
 
     t.add_resource(asg.AutoScalingGroup(
         config['resource_name'] + "ASG",
-        DependsOn=[launch_template.name],
+        DependsOn=[launch_template],
         AvailabilityZones=GetAZs(Ref('AWS::Region')),
         LaunchTemplate=asg.LaunchTemplateSpecification(
-            LaunchTemplateName=launch_template.name,
+            LaunchTemplateId=Ref(launch_template),
             Version=launch_template.GetAtt("LatestVersionNumber")
         ),
         AutoScalingGroupName=Ref(name_param),
@@ -170,3 +158,6 @@ def create_infra_template(config) -> Template:
         MinSize=0
     ))
     return t
+
+
+
