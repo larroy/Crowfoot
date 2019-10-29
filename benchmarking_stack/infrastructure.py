@@ -67,7 +67,7 @@ def create_infra_template(config) -> Template:
             GroupDescription="Allow SSH inbound and all traffic between cluster nodes.",
             SecurityGroupIngress=[
                 {"FromPort": 22, "ToPort": 22, "IpProtocol": "tcp", "CidrIp": "0.0.0.0/0"}
-            ],
+            ]
         )
     )
     cluster_sg_ingress_rule_internal = t.add_resource(
@@ -76,6 +76,28 @@ def create_infra_template(config) -> Template:
             GroupName=Ref(cluster_sg),
             IpProtocol='-1',
             SourceSecurityGroupName=Ref(cluster_sg),
+            FromPort='-1',
+            ToPort='-1',
+            DependsOn='ClusterSG'
+        )
+    )
+    cluster_sg_egress_rule_default = t.add_resource(
+        SecurityGroupEgress(
+            "DefaultSGEgressRule",
+            GroupId=cluster_sg.GetAtt("GroupId"),
+            IpProtocol='-1',
+            FromPort='-1',
+            ToPort='-1',
+            CidrIp="0.0.0.0/0",
+            DependsOn='ClusterSG'
+        )
+    )
+    cluster_sg_egress_rule_internal = t.add_resource(
+        SecurityGroupEgress(
+            "InterClusterAccessSGEgressRule",
+            GroupId=cluster_sg.GetAtt("GroupId"),
+            IpProtocol='-1',
+            DestinationSecurityGroupId=cluster_sg.GetAtt("GroupId"),
             FromPort='-1',
             ToPort='-1',
             DependsOn='ClusterSG'
