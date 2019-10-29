@@ -191,5 +191,5 @@
 - import_playbook: playbooks/gpu.yml
 - import_playbook: playbooks/mxnet.yml
 - import_playbook: playbooks/efa.yml
+- import_playbook: playbooks/mpi.yml
 - import_playbook: playbooks/datasets.yml
-#- import_playbook: playbooks/mpi.yml
