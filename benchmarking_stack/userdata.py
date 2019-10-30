@@ -102,7 +102,7 @@ def raid_setup(raid_device, mount, level='0') -> bool:
             device = fields[0]
             if not device in ephemeral_devices and device != raid_device:
                 fstab.append(line)
-        fstab.append('{} {} ext4 noatime,discard 0 0'.format(raid_device, mount))
+        fstab.append('{} {} ext4 noatime,discard,nofail,nobootwait 0 0'.format(raid_device, mount))
 
     with open("/etc/fstab", "w") as f:
         f.writelines(fstab)
