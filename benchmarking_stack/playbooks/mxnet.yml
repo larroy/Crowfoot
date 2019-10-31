@@ -3,35 +3,70 @@
   hosts: all
   gather_facts: no
   become: true
-  become_user: root
+  become_user: "{{ user_name }}"
   tasks:
     - name: Copy MXNet build config cmake_options.yml
       copy:
         src: cmake_options.yml
         dest: "/home/{{ user_name }}/cmake_options.yml"
 
-    - name: Get mxnet
+    - name: Check out latest mxnet source
       shell: |
         set -e
         git clone -q --recursive https://github.com/larroy/mxnet.git
-        git clone -q --recursive https://github.com/larroy/gluon-cv.git
-        git clone -q --recursive https://github.com/larroy/gluon-nlp.git
         cp cmake_options.yml mxnet
+      args:
+        executable: /bin/bash
+        chdir: "/home/{{ user_name }}"
+        creates: "/home/{{ user_name }}/mxnet"
+
+    - name: Build mxnet
+      shell: |
+        set -e
         cd mxnet
-        ./dev_menu.py build 2>&1 > build.log
-        source py3_venv/bin/activate
-        cd ..
+        ./dev_menu.py build >> build.log 2>&1
+      args:
+        executable: /bin/bash
+        chdir: "/home/{{ user_name }}"
+        creates: "/home/{{ user_name }}/mxnet/build/libmxnet.so"
+
+    - name: Check out gluon-cv source
+      shell: |
+        set -e
+        git clone -q --recursive https://github.com/larroy/gluon-cv.git
+      args:
+        executable: /bin/bash
+        chdir: "/home/{{ user_name }}"
+        creates: "/home/{{ user_name }}/gluon-cv"
+
+    - name: Build gluon-cv
+      shell: |
+        set -e
+        source mxnet/py3_venv/bin/activate
         pip3 install -e gluon-cv > /dev/null
+      args:
+        executable: /bin/bash
+        chdir: "/home/{{ user_name }}"
+        creates: "/home/{{ user_name }}/gluon-cv/gluoncv.egg-info"
+
+    - name: Check out gluon-nlp source
+      shell: |
+        set -e
+        git clone -q --recursive https://github.com/larroy/gluon-nlp.git
+      args:
+        executable: /bin/bash
+        chdir: "/home/{{ user_name }}"
+        creates: "/home/{{ user_name }}/gluon-nlp"
+
+    - name: Build gluon-nlp
+      shell: |
+        set -e
+        source mxnet/py3_venv/bin/activate
         pip3 install -e gluon-nlp > /dev/null
       args:
         executable: /bin/bash
         chdir: "/home/{{ user_name }}"
-        creates: /home/{{ user_name }}/mxnet
+        creates: "/home/{{ user_name }}/gluon-nlp/src/gluonnlp.egg-info"
 
-    - name: Configure /home/{{ user_name }}
-      file:
-        path: /home/{{ user_name }}
-        recurse: yes
-        owner: "{{ user_name }}"
-        group: "{{ user_name }}"
+
 
