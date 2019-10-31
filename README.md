@@ -43,5 +43,20 @@ and -m the module (by default is prepare.py).
 ./driver.py -f create_inventory bert
 ```
 
+## Generating AMI images using paquito
 
+To generate a new AMI, use the paquito script. We suggest you add the following lines in ~/.ssh/config so
+your SSH sessions (and provisioning via ansible) will not be disconnected due to inactivity.
+
+```
+Host *
+    ServerAliveInterval 120
+    ServerAliveCountMax 10
+```
+
+Generating an image with Paquito:
+
+```
+./paquito.py
+```
 
