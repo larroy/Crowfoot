@@ -43,7 +43,10 @@
       shell: |
         set -e
         source mxnet/py3_venv/bin/activate
-        pip3 install -e gluon-cv > /dev/null
+        pip install cython
+        pip install pycocotools
+        #pip3 install -e gluon-cv > /dev/null
+        cd gluon-cv && python setup.py install --with-cython
       args:
         executable: /bin/bash
         chdir: "/home/{{ user_name }}"
