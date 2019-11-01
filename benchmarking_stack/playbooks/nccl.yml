@@ -3,21 +3,15 @@
   hosts: all
   gather_facts: no
   become: true
-  become_user: root
+  become_user: "{{ user_name }}"
   tasks:
-    - name: Install build dependencies
-      apt:
-        name:
-          - libtool
-          - autoconf
-
     - name: Install latest nccl library
       shell: |
         set -e
         git clone -q https://github.com/NVIDIA/nccl.git
         cd nccl
         make -j src.build 2>&1 >> build.log
-        make install PREFIX=/usr/local
+        sudo make install PREFIX=/usr/local
       args:
         executable: /bin/bash
         chdir: "/home/{{ user_name }}"
@@ -33,7 +27,7 @@
         ./configure --with-libfabric=/opt/amazon/efa --with-cuda=/usr/local/cuda \
           --with-nccl=/usr/local --with-mpi=/opt/amazon/openmpi
         PATH=/opt/amazon/openmpi/bin:$PATH make
-        make install
+        sudo make install
       args:
         executable: /bin/bash
         chdir: "/home/{{ user_name }}"
