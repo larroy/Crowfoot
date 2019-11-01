@@ -9,7 +9,7 @@
      //  "/
      |/ /\_E
      / / \-E
-    / /     
+    / /
     \/
 
 ```
@@ -29,21 +29,23 @@ source py3env/bin/activate[...]
 pip install -r requirements.txt
 ```
 
-## Example of use:
-
-The driver can call any function on any module inside the base directory. -f chooses the function
-and -m the module (by default is prepare.py).
-
-```
-./driver.py bert
-
-
-./driver.py -f provision bert
-
-./driver.py -f create_inventory bert
-```
+## Usage:
 
 ## Generating AMI images using paquito
+
+Review settings in ami_launch_template.yml which configures AMI creation
+```
+./paquito.py
+```
+
+Once the AMI is ready, edit and review the settings in a stack description file such as
+`bert_us-east-1.yaml` and pass it as an argument to the driver:
+
+```
+./driver.py bert_us-east-1.yaml
+```
+
+This will instantiate a cloud formation template which will spin up resources such as ASGs needed.
 
 To generate a new AMI, use the paquito script. We suggest you add the following lines in ~/.ssh/config so
 your SSH sessions (and provisioning via ansible) will not be disconnected due to inactivity.
@@ -53,10 +55,3 @@ Host *
     ServerAliveInterval 120
     ServerAliveCountMax 10
 ```
-
-Generating an image with Paquito:
-
-```
-./paquito.py
-```
-
