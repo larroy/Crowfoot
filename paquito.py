@@ -102,6 +102,14 @@ def _provision(ec2_resource, ec2_client, launch_template, args) -> None:
         launch_template.get('CreateInstanceArgs', {}))
     try:
         wait_for_instances(instances)
+        ec2_resource.create_tags(
+            Resources = [instance.id for instance in instances]
+            , Tags = [
+              {'Key': 'AWSCop', 'Value': 'DevDesktop'}
+            ]
+        )
+
+
         for instance in instances:
             host = instance.public_dns_name
             logging.info("Waiting for host {}".format(host))
