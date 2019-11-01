@@ -8,6 +8,8 @@ A simple AMI building tool.
 
 Will launch an instance and provision with Ansible playbooks and create an AMI out of it.
 
+Uses configuration from file 'ami_launch_template.yml'
+
 """
 import os
 import sys
@@ -24,6 +26,10 @@ import yaml
 import re
 from util import *
 import itertools
+
+
+AMI_LAUNCH_TEMPLATE_FILE = os.getenv('PAQUITO_AMI_LAUNCH_TEMPLATE', 'ami_launch_template.yml')
+
 
 def group_user_data(xs):
     """Group a flat list of [file, mime, file, mime] into
@@ -102,6 +108,14 @@ def _provision(ec2_resource, ec2_client, launch_template, args) -> None:
         launch_template.get('CreateInstanceArgs', {}))
     try:
         wait_for_instances(instances)
+        ec2_resource.create_tags(
+            Resources = [instance.id for instance in instances]
+            , Tags = [
+              {'Key': 'AWSCop', 'Value': 'DevDesktop'}
+            ]
+        )
+
+
         for instance in instances:
             host = instance.public_dns_name
             logging.info("Waiting for host {}".format(host))
@@ -196,7 +210,7 @@ def main():
     config_logging()
 
     launch_template = dict()
-    launch_template_file = os.getenv('PAQUITO_TEMPLATE', 'ami_launch_template.yml')
+    launch_template_file = os.getenv('PAQUITO_TEMPLATE', AMI_LAUNCH_TEMPLATE_FILE)
     if os.path.exists(launch_template_file):
         with open(launch_template_file, 'r') as f:
             launch_template = yaml.load(f, Loader=yaml.SafeLoader)

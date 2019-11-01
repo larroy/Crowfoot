@@ -22,7 +22,8 @@ user-data:
 
 # https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/device_naming.html
 CreateInstanceArgs:
-    InstanceInitiatedShutdownBehavior: terminate
+    # Python script terminates the instance itself
+    #InstanceInitiatedShutdownBehavior: terminate
     BlockDeviceMappings:
         - DeviceName: /dev/sda1
           Ebs: {DeleteOnTermination: true, VolumeSize: 400, VolumeType: gp2}
