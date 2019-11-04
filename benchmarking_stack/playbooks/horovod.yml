@@ -1,0 +1,17 @@
+--- # Ansible playbook 
+- name: Install Horovod
+  hosts: all
+  gather_facts: no
+  become: true
+  become_user: "{{ user_name }}"
+  tasks:
+    - name: Install horovod into virtual environment using pip.
+      shell: |
+        set -e
+        source mxnet/py3_venv/bin/activate
+        HOROVOD_GPU_ALLREDUCE=NCCL pip3 install --no-cache-dir horovod
+      args:
+        executable: /bin/bash
+        chdir: "/home/{{ user_name }}"
+        creates: "/home/{{ user_name }}/mxnet/py3_venv/bin/horovodrun"
+
