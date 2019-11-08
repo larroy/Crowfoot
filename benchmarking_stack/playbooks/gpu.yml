@@ -47,7 +47,7 @@
         name:
           - nvidia-driver-418
           - nvidia-docker2
-          - cuda
+          - cuda-10-1
           - libcudnn7
           - libcudnn7-dev
 #          - libnccl2
